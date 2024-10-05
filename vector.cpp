@@ -16,10 +16,18 @@ private:
   // Functional class for iterators...
   struct iterator
   {
-    TYPE *ptr;
+    // Adding required typedefs for std::iterator_traits
+    using difference_type = std::ptrdiff_t;                    // Used for pointer arithmetic
+    using value_type = TYPE;                                   // The type of value stored in the vector
+    using pointer = TYPE *;                                    // Pointer to the value type
+    using reference = TYPE &;                                  // Reference to the value type
+    using iterator_category = std::random_access_iterator_tag; // Iterator category
+
+    mutable TYPE *ptr;
     iterator() : ptr(nullptr) {}                  // default
-    iterator(TYPE *ptr) : ptr(ptr) {}             // construct from pointer
+    explicit iterator(TYPE *ptr) : ptr(ptr) {}    // construct from pointer
     iterator(const iterator &it) : ptr(it.ptr) {} // copy from iterator
+
     // Iterator functions...
     iterator &operator++() // ++
     {
@@ -43,11 +51,26 @@ private:
       ptr--;
       return temp; // *this
     }
-    iterator operator+(const size_t distance) { return ptr + distance; }
-    iterator operator-(const size_t distance) { return ptr - distance; }
-    TYPE &operator*() { return *ptr; }                                  // *
-    bool operator==(const iterator &other) { return ptr == other.ptr; } // ==
-    bool operator!=(const iterator &other) { return ptr != other.ptr; } // !=
+    iterator operator+(const size_t &distance) const // + (integer)
+    {
+      if (distance == 0)
+        return *this;
+      return iterator(ptr + distance);
+    }
+    iterator operator-(const size_t &distance) const // - (integer)
+    {
+      if (distance == 0)
+        return *this;
+      return iterator(ptr - distance);
+    }
+    difference_type operator-(const iterator &other) const { return ptr - other.ptr; } // - (iterator)
+    TYPE &operator*() { return *ptr; }                                                 // *
+    const TYPE &operator*() const { return *ptr; }                                     // * (const)
+    bool operator>(const iterator &other) const { return ptr > other.ptr; }            // >
+    bool operator<(const iterator &other) const { return ptr < other.ptr; }            // <
+    bool operator==(std::nullptr_t) const { return ptr == nullptr; }                   // ==
+    bool operator==(const iterator &other) const { return ptr == other.ptr; }          // ==
+    bool operator!=(const iterator &other) const { return ptr != other.ptr; }          // !=
     iterator &operator=(const iterator &other)
     {
       if (this != &other)
@@ -71,25 +94,27 @@ private:
     std::copy(from.ptr, to.ptr, output.ptr);
   }
   // resize function: allocates new space, copies data
-  void resizeContainer(const size_t &size)
+  void resizeContainer(const size_t &size, bool shrink = false)
   {
     elements = size;
-    max_size = size + size / 2;
+    max_size = shrink ? size : size + size / 2;
     TYPE *newContainer = new TYPE[max_size]; // reallocates new container size + buffer
 
     if (container != nullptr)
     {
+      end_it = begin_it + size; // setting end iterator to the new size
       copy(begin_it, end_it, iterator(newContainer));
       delete[] container;
+      container = nullptr;
     }
 
     // updating container, data, pointers
     container = newContainer;
 
-    begin_it = iterator(container);               // points to the first element
-    end_it = iterator(container + elements);      // points one past the last element
-    current_it = iterator(container + elements);  // initially set current to the end
-    max_size_it = iterator(container + max_size); // points one past max size
+    begin_it = iterator(container);                  // points to the first element
+    end_it = iterator(container + elements);         // points one past the last element
+    current_it = iterator(container + elements - 1); // points to the last element
+    max_size_it = iterator(container + max_size);    // points one past max size
   }
   // distance function: calculates the distance between two iterators
   size_t distance(const iterator &start, const iterator &end) const
@@ -134,11 +159,17 @@ public:
   void push_back(const TYPE &value)
   {
     if (end_it == max_size_it)
+    {
       resizeContainer(max_size);
-    *(current_it.ptr + 1) = value; // add new element
-    current_it++;
-    end_it++;
-    elements++;
+      *end_it = value; // add new element
+    }
+    else
+    {
+      *end_it = value;
+      current_it++;
+      end_it++;
+      elements++;
+    }
   }
 
   // resize function: allocates new space, copies data
@@ -153,7 +184,9 @@ public:
   {
     if (current_it == begin_it)
       return;
-    delete *(current_it);
+    current_it--;
+    end_it--;
+    elements--;
   }
 
   // shrink_to_fit function: shrinks the container to fit the current size
@@ -161,29 +194,27 @@ public:
   {
     if (elements <= 1)
       return;
-    resizeContainer((elements * 2) / 3 + 1);
+    resizeContainer(elements, true);
   }
 
   // erase function (iterator): removes elements in a range
-  void erase(const iterator &from, const iterator &to = nullptr)
+  void erase(const iterator &from = nullptr, const iterator &to = nullptr)
   {
+    if (from == nullptr && to == nullptr)
+    {
+      resizeContainer((size_t)(0));
+      return;
+    }
+
     size_t iFrom = std::distance(begin_it, from);
     size_t iTo = std::distance(begin_it, to);
-    size_t iCurrent = std::distance(begin_it, current_it);
+    size_t iCurrent = std::distance(begin_it, end_it);
 
     size_t k = iFrom;
     for (size_t i = iTo; i <= iCurrent; i++)
       container[i] = container[k++];
-  }
 
-  // erase function (index): removes elements in a range
-  void erase(const size_t &from, const size_t &to = -1)
-  {
-    size_t iCurrent = std::distance(begin(), current_it);
-
-    size_t k = from;
-    for (size_t i = to; i <= iCurrent; i++)
-      container[i] = container[k++];
+    resizeContainer(elements - (iTo - iFrom));
   }
 
   // TRAVERSAL/TOOLS
@@ -191,40 +222,34 @@ public:
 
   size_t capacity() const { return max_size; }
 
-  TYPE front() const { return *(begin_it.ptr); }
+  TYPE front() const
+  {
+    if (empty())
+      throw std::out_of_range("Vector is empty");
+    return *begin_it;
+  }
 
-  TYPE back() const { return *(end_it.ptr - 1); }
+  TYPE back() const
+  {
+    if (empty())
+      throw std::out_of_range("Vector is empty");
+    return *(end_it - (size_t)(1));
+  }
 
   iterator begin() const { return begin_it; }
 
   iterator end() const { return end_it; }
 
-  TYPE at(size_t const &i) const { return container[i]; }
+  TYPE at(size_t const &i) const
+  {
+    if (i >= elements || i < 0)
+      throw std::out_of_range("Index out of range");
+    else
+      return container[i];
+  }
 
   TYPE operator[](size_t const &i) const { return container[i]; }
 
   // BOOL OPERATIONS
-  bool empty(void) { return (elements == 0) ? true : false; }
+  bool empty(void) const { return (elements == 0) ? true : false; }
 };
-
-int main()
-{
-  // BATCH TESTING WITH DIFFERENT TYPES... (manual testing)
-
-  Vector<int> copyMe = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-  Vector<int> v = copyMe;
-  // Vector<float> v = {1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9, 10.10};
-  // Vector<char> v = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'};
-  // Vector<double> v = {1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9, 10.10};
-  // Vector<bool> v = {true, false, true, false, true, false, true, false, true, false};
-  // Vector<string> v = {"start", "2", "3", "4", "5", "6", "7", "8", "9", "end"};
-
-  //  Printing the vector
-  std::cout << "front: " << v.front() << "\nback: " << v.back() << "\nsize: " << v.size() << "\ncapacity: " << v.capacity() << std::endl;
-
-  // Thanks to our member iterator, we can iterate through the vector
-  for (const auto &i : v)
-    std::cout << i << ", ";
-
-  return 0;
-}
