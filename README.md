@@ -4,8 +4,12 @@ This project is a custom implementation of a C++ vector, showcasing my growth in
 
 ## Project Structure
 
-- **vector.cpp**: The main C++ source file containing the vector implementation and the associated functions.
-- **vector.exe**: Compiled executable for testing the vector implementation (Windows).
+The repository consists of the following files:
+
+- **main.cpp**: Contains the main driver function for testing the vector implementation and validating various functionalities.
+- **vector.hpp**: Header file containing the `Vector` class definition, method declarations, and supporting iterator class.
+- **main.exe**: Compiled executable for testing the vector implementation on Windows platforms.
+- **README.md**: Documentation file explaining the project structure, setup, and usage instructions.
 
 ## Features
 
@@ -15,49 +19,74 @@ This project is a custom implementation of a C++ vector, showcasing my growth in
   - `push_back()`: Adds an element to the end of the vector.
   - `pop_back()`: Removes the last element.
   - `resize()`: Changes the vector size, adjusting memory as needed.
+  - `shrink_to_fit()`: Reduces the memory footprint by freeing unused capacity.
   - `operator[]`: Overloads the subscript operator to allow easy access to elements.
   - `capacity()`: Returns the current capacity of the vector.
   - `size()`: Returns the number of elements in the vector.
+  - `erase()`: Removes elements from a specified range.
+  - `at()`: Safely accesses an element at a given index, with bounds checking.
 - **Extensive Comments**: The code includes comments explaining the purpose and functionality of each part, making it easy to understand the logic and thought process behind the implementation.
 
 ## Technologies
 
 - **C++**: The core language used for implementing the vector class and managing dynamic memory.
-- **Windows Executable**: The project includes a compiled executable (`.exe`) for running the program on Windows platforms.
+- **Windows Executable**: The project includes a compiled executable (`main.exe`) for running the program on Windows platforms.
 
 ## Setup and Compilation
 
 ### Prerequisites
+
 - C++ compiler (e.g., GCC, Clang, or MSVC)
 - Windows (for the provided executable) or any platform with a C++ compiler
 
 ### To Compile the Source Code:
+
 1. Clone the repository:
+
     ```bash
-    git clone https://github.com/yourusername/cpp-vector-implementation.git
+    git clone https://github.com/Jorstors/Vector-Implementation
     ```
+
 2. Navigate to the project directory:
+
     ```bash
-    cd cpp-vector-implementation
+    cd Vector-Implementation
     ```
-3. Compile the `vector.cpp` file:
+
+3. Compile the `main.cpp` file along with `vector.hpp`:
+
     ```bash
-    g++ vector.cpp -o vector
+    g++ main.cpp -o main
     ```
 
 4. Run the executable (Linux/macOS):
+
     ```bash
-    ./vector
+    ./main
     ```
 
 5. Or, on Windows:
+
     ```bash
-    vector.exe
+    main.exe
     ```
 
 ## Usage
 
 The program tests the custom vector class by performing various operations such as adding, removing, and accessing elements. The results are printed to the console, demonstrating the functionality and correctness of the implementation.
+
+### Example Run
+
+The provided `main.cpp` file tests the following operations:
+
+- Constructing vectors using different constructors.
+- Adding elements using `push_back()`.
+- Removing elements with `pop_back()` and `erase()`.
+- Accessing elements with `operator[]` and `at()`.
+- Shrinking the vector with `shrink_to_fit()`.
+- Printing the vector size and capacity to validate dynamic memory management.
+
+Modify the `main.cpp` file to add custom tests as needed.
 
 ## Comments and Documentation
 
@@ -67,7 +96,7 @@ The program tests the custom vector class by performing various operations such 
 ## Key Learning Areas
 
 - **Dynamic Memory Management**: Learned how to properly allocate, resize, and deallocate memory using pointers in C++.
-- **Operator Overloading**: Implemented custom operators (e.g., `[]`) to improve the usability of the vector class.
+- **Operator Overloading**: Implemented custom operators (e.g., `[]`,`==`, `*` ) to improve the operabillity of the vector and iterator classes.
 - **Functionality**: Implemented core functions that allow the vector to handle variable-size arrays efficiently, mimicking the behavior of `std::vector`.
 
 ### License
