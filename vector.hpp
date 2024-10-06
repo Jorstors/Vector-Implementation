@@ -82,10 +82,10 @@ private:
     }
   };
   // general iterators
-  iterator current_it;
-  iterator begin_it;
-  iterator end_it;
-  iterator max_size_it;
+  iterator current_it;  // points to the last element
+  iterator begin_it;    // points to the first element
+  iterator end_it;      // points one past the last element
+  iterator max_size_it; // points one past max size
 
   // Helper functions...
 
@@ -207,22 +207,25 @@ public:
       return;
     }
 
-    size_t iFrom = std::distance(begin_it, from);
-    size_t iTo = std::distance(begin_it, to);
-    size_t iCurrent = std::distance(begin_it, end_it);
+    size_t iFrom = std::distance(begin_it, from);      // get the index of the first element to erase
+    size_t iTo = std::distance(begin_it, to);          // get the index of the last element to erase
+    size_t iCurrent = std::distance(begin_it, end_it); // get the index of the last element
 
-    size_t k = iFrom;
-    for (size_t i = iTo; i <= iCurrent; i++)
-      container[i] = container[k++];
+    size_t k = iFrom;                        // initialize a counter to keep track of the elements to copy
+    for (size_t i = iTo; i <= iCurrent; i++) // loop through the elements from the last one to erase to the last one
+      container[i] = container[k++];         // copy the element at index k to the current index and increment k
 
     resizeContainer(elements - (iTo - iFrom));
   }
 
   // TRAVERSAL/TOOLS
+  // returns the current size of the vector
   size_t size() const { return distance(begin_it, end_it); }
 
+  // returns the capacity of the vector
   size_t capacity() const { return max_size; }
 
+  // returns the first element of the vector
   TYPE front() const
   {
     if (empty())
@@ -230,6 +233,7 @@ public:
     return *begin_it;
   }
 
+  // returns the last element of the vector
   TYPE back() const
   {
     if (empty())
@@ -237,10 +241,13 @@ public:
     return *(end_it - (size_t)(1));
   }
 
+  // returns a pointer to the first element of the vector
   iterator begin() const { return begin_it; }
 
+  // returns a pointer to the last element of the vector
   iterator end() const { return end_it; }
 
+  // returns the element at the given index
   TYPE at(size_t const &i) const
   {
     if (i >= elements || i < 0)
@@ -249,8 +256,10 @@ public:
       return container[i];
   }
 
+  // returns the element at the given index
   TYPE operator[](size_t const &i) const { return container[i]; }
 
   // BOOL OPERATIONS
+  // checks if the vector is empty
   bool empty(void) const { return (elements == 0) ? true : false; }
 };
